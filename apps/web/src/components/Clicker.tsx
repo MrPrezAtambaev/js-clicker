@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/stores/gameStore";
 import { formatNumber, formatCPS } from "@/lib/utils";
+import { playClickSound } from "@/lib/sounds";
 
 interface ClickEffect {
   id: number;
@@ -18,6 +19,7 @@ export function Clicker() {
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       click();
+      playClickSound();
 
       // Get click position relative to button
       const rect = buttonRef.current?.getBoundingClientRect();

@@ -1,11 +1,22 @@
+import { useCallback } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/stores/gameStore";
 import { UPGRADES } from "@code-clicker/shared";
 import { formatNumber } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { playPurchaseSound, playErrorSound } from "@/lib/sounds";
 
 export function Upgrades() {
   const { upgrades, commits, buyUpgrade, getUpgradeCost, canAffordUpgrade } = useGameStore();
+
+  const handleBuy = useCallback((upgradeId: string, canAfford: boolean) => {
+    if (canAfford) {
+      buyUpgrade(upgradeId);
+      playPurchaseSound();
+    } else {
+      playErrorSound();
+    }
+  }, [buyUpgrade]);
 
   return (
     <div className="flex flex-col gap-2 h-full overflow-y-auto pr-2">
@@ -24,8 +35,7 @@ export function Upgrades() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.05 }}
-            onClick={() => buyUpgrade(upgrade.id)}
-            disabled={!canAfford}
+            onClick={() => handleBuy(upgrade.id, canAfford)}
             className={cn(
               "upgrade-card w-full p-3 rounded-lg border border-border bg-card text-left transition-all",
               canAfford

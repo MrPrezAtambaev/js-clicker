@@ -1,6 +1,8 @@
+import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trophy } from "lucide-react";
 import { ACHIEVEMENTS } from "@code-clicker/shared";
+import { playAchievementSound } from "@/lib/sounds";
 
 interface AchievementToastProps {
   achievementIds: string[];
@@ -8,6 +10,16 @@ interface AchievementToastProps {
 }
 
 export function AchievementToast({ achievementIds, onDismiss }: AchievementToastProps) {
+  const prevCountRef = useRef(0);
+
+  // Play sound when new achievements are added
+  useEffect(() => {
+    if (achievementIds.length > prevCountRef.current) {
+      playAchievementSound();
+    }
+    prevCountRef.current = achievementIds.length;
+  }, [achievementIds.length]);
+
   return (
     <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
       <AnimatePresence>
