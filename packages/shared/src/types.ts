@@ -3,6 +3,33 @@ import type { Upgrade, Achievement } from "./schemas";
 // Upgrade definitions with all game data
 export const UPGRADES: Omit<Upgrade, "owned">[] = [
   {
+    id: "cursor",
+    name: "Курсор",
+    description: "Двойная сила клика",
+    baseCost: 50,
+    cps: 0,
+    clickMultiplier: 1,
+    icon: "👆",
+  },
+  {
+    id: "better-cursor",
+    name: "Мощный курсор",
+    description: "+3 к силе клика",
+    baseCost: 500,
+    cps: 0,
+    clickMultiplier: 3,
+    icon: "✌️",
+  },
+  {
+    id: "auto-clicker",
+    name: "Авто-кликер",
+    description: "+10 к силе клика",
+    baseCost: 5000,
+    cps: 0,
+    clickMultiplier: 10,
+    icon: "🖱️",
+  },
+  {
     id: "hello-world",
     name: "Hello World",
     description: 'console.log("Hello World")',
@@ -185,4 +212,30 @@ export function calculateTotalCPS(upgrades: Record<string, number>): number {
     const owned = upgrades[upgrade.id] || 0;
     return total + upgrade.cps * owned;
   }, 0);
+}
+
+// Helper to calculate total click power from click multiplier upgrades
+export function calculateClickPower(upgrades: Record<string, number>): number {
+  const baseClick = 1;
+  const multiplierBonus = UPGRADES.reduce((total, upgrade) => {
+    const owned = upgrades[upgrade.id] || 0;
+    const clickMult = upgrade.clickMultiplier || 0;
+    return total + clickMult * owned;
+  }, 0);
+  return baseClick + multiplierBonus;
+}
+
+// Helper to calculate XP needed for a level
+export function calculateXPForLevel(level: number): number {
+  return Math.floor(100 * Math.pow(1.5, level - 1));
+}
+
+// Helper to get click upgrades
+export function getClickUpgrades() {
+  return UPGRADES.filter(u => u.clickMultiplier && u.clickMultiplier > 0);
+}
+
+// Helper to get CPS upgrades
+export function getCPSUpgrades() {
+  return UPGRADES.filter(u => u.cps > 0);
 }

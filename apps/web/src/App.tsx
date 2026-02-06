@@ -8,6 +8,8 @@ import { Achievements } from "@/components/Achievements";
 import { AchievementToast } from "@/components/AchievementToast";
 import { CodeRain } from "@/components/CodeRain";
 import { Stats } from "@/components/Stats";
+import { ExperienceBar } from "@/components/ExperienceBar";
+import { DevPanel } from "@/components/DevPanel";
 import { Button } from "@/components/ui/button";
 import type { GameState, SaveGameResponse, LoadGameResponse } from "@code-clicker/shared";
 
@@ -53,19 +55,22 @@ function App() {
   });
 
   const handleSave = useCallback(() => {
-    const state: GameState = {
-      commits,
-      totalCommits,
-      commitsPerClick: 1,
-      commitsPerSecond,
-      upgrades,
-      achievements,
-      totalClicks,
-      startedAt,
-      playTime,
+    const state = useGameStore.getState();
+    const saveState: GameState = {
+      commits: state.commits,
+      totalCommits: state.totalCommits,
+      commitsPerClick: state.commitsPerClick,
+      commitsPerSecond: state.commitsPerSecond,
+      upgrades: state.upgrades,
+      achievements: state.achievements,
+      totalClicks: state.totalClicks,
+      startedAt: state.startedAt,
+      playTime: state.playTime,
+      experience: state.experience,
+      level: state.level,
     };
-    saveMutation.mutate(state);
-  }, [commits, totalCommits, commitsPerSecond, upgrades, achievements, totalClicks, startedAt, playTime, saveMutation]);
+    saveMutation.mutate(saveState);
+  }, [saveMutation]);
 
   const handleLoad = useCallback(async () => {
     const result = await loadQuery.refetch();
@@ -95,41 +100,46 @@ function App() {
       {/* Main content */}
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Header */}
-        <header className="flex items-center justify-between p-4 border-b border-border bg-background/80 backdrop-blur-sm">
-          <div className="flex items-center gap-2">
-            <Monitor className="w-6 h-6 text-green-400" />
-            <h1 className="text-xl font-bold">Code Clicker</h1>
+        <header className="flex flex-col gap-3 p-4 border-b border-border bg-background/80 backdrop-blur-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Monitor className="w-6 h-6 text-green-400" />
+              <h1 className="text-xl font-bold">Code Clicker</h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSave}
+                disabled={saveMutation.isPending}
+                className="gap-2"
+              >
+                <Save className="w-4 h-4" />
+                {saveMutation.isPending ? "..." : "Save"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLoad}
+                disabled={loadQuery.isFetching}
+                className="gap-2"
+              >
+                {loadQuery.isFetching ? "..." : "Load"}
+              </Button>
+              <Achievements />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleReset}
+                title="Сбросить прогресс"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSave}
-              disabled={saveMutation.isPending}
-              className="gap-2"
-            >
-              <Save className="w-4 h-4" />
-              {saveMutation.isPending ? "..." : "Save"}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLoad}
-              disabled={loadQuery.isFetching}
-              className="gap-2"
-            >
-              {loadQuery.isFetching ? "..." : "Load"}
-            </Button>
-            <Achievements />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleReset}
-              title="Сбросить прогресс"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </Button>
-          </div>
+
+          {/* Experience Bar */}
+          <ExperienceBar />
         </header>
 
         {/* Main game area */}
@@ -148,8 +158,10 @@ function App() {
           </div>
 
           {/* Right column - Upgrades */}
-          <div className="lg:col-span-1 h-[calc(100vh-120px)]">
-            <Upgrades />
+          <div className="lg:col-span-1">
+            <div className="h-[calc(100vh-200px)] overflow-y-auto">
+              <Upgrades />
+            </div>
           </div>
         </main>
 
@@ -158,6 +170,9 @@ function App() {
           <Stats />
         </div>
       </div>
+
+      {/* Hidden Dev Panel - Activated with Ctrl+Shift+D */}
+      <DevPanel />
     </div>
   );
 }

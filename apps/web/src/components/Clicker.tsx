@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/stores/gameStore";
 import { formatNumber, formatCPS } from "@/lib/utils";
@@ -44,6 +44,9 @@ export function Clicker() {
     [click]
   );
 
+  const formattedCommits = useMemo(() => formatNumber(commits), [commits]);
+  const formattedCPS = useMemo(() => formatCPS(commitsPerSecond), [commitsPerSecond]);
+
   return (
     <div className="flex flex-col items-center gap-6">
       {/* Stats */}
@@ -54,12 +57,12 @@ export function Clicker() {
           transition={{ duration: 0.1 }}
           key={Math.floor(commits)}
         >
-          {formatNumber(commits)}
+          {formattedCommits}
         </motion.div>
         <div className="text-xl text-muted-foreground mt-1">Commits</div>
         {commitsPerSecond > 0 && (
           <div className="text-sm text-green-500 mt-2">
-            +{formatCPS(commitsPerSecond)} в секунду
+            +{formattedCPS} в секунду
           </div>
         )}
       </div>
@@ -71,7 +74,7 @@ export function Clicker() {
           onClick={handleClick}
           whileTap={{ scale: 0.95 }}
           whileHover={{ scale: 1.02 }}
-          className="relative w-48 h-48 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border-4 border-green-500/50 clicker-glow cursor-pointer select-none flex items-center justify-center overflow-hidden"
+          className="relative w-48 h-48 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border-4 border-green-500/50 clicker-glow cursor-pointer select-none flex items-center justify-center overflow-visible"
         >
           {/* Code brackets icon */}
           <span className="text-7xl text-green-400 font-mono select-none">
@@ -83,11 +86,17 @@ export function Clicker() {
             {clickEffects.map((effect) => (
               <motion.div
                 key={effect.id}
-                initial={{ opacity: 1, scale: 1, x: effect.x - 20, y: effect.y - 10 }}
-                animate={{ opacity: 0, scale: 1.5, y: effect.y - 60 }}
+                initial={{ opacity: 1, scale: 1 }}
+                animate={{ opacity: 0, scale: 1.2, y: -50 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
-                className="absolute text-xl font-bold text-green-400 pointer-events-none"
+                style={{
+                  position: "absolute",
+                  left: effect.x,
+                  top: effect.y,
+                  transform: "translate(-50%, -50%)",
+                }}
+                className="text-xl font-bold text-green-400 pointer-events-none whitespace-nowrap"
               >
                 +{commitsPerClick}
               </motion.div>

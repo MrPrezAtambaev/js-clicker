@@ -7,6 +7,7 @@ export const upgradeSchema = z.object({
   description: z.string(),
   baseCost: z.number(),
   cps: z.number(), // commits per second
+  clickMultiplier: z.number().optional(), // bonus to click power
   icon: z.string(),
   owned: z.number().default(0),
 });
@@ -33,6 +34,8 @@ export const gameStateSchema = z.object({
   startedAt: z.number().default(Date.now()),
   playTime: z.number().default(0), // in seconds
   lastSaved: z.number().optional(),
+  experience: z.number().default(0), // XP for leveling
+  level: z.number().default(1), // Current level
 });
 
 // API request/response schemas

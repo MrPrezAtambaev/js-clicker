@@ -6,6 +6,8 @@ import {
   ACHIEVEMENTS,
   calculateUpgradeCost,
   calculateTotalCPS,
+  calculateClickPower,
+  calculateXPForLevel,
 } from "@code-clicker/shared";
 
 interface GameStore extends GameState {
@@ -18,6 +20,12 @@ interface GameStore extends GameState {
   loadState: (state: Partial<GameState>) => void;
   getUpgradeCost: (upgradeId: string) => number;
   canAffordUpgrade: (upgradeId: string) => boolean;
+  addExperience: (amount: number) => void;
+  // Dev mode actions
+  devAddCommits: (amount: number) => void;
+  devAddXP: (amount: number) => void;
+  devUnlockAllUpgrades: () => void;
+  devSetLevel: (level: number) => void;
 }
 
 const initialState: GameState = {
@@ -31,6 +39,8 @@ const initialState: GameState = {
   startedAt: Date.now(),
   playTime: 0,
   lastSaved: undefined,
+  experience: 0,
+  level: 1,
 };
 
 export const useGameStore = create<GameStore>()(
@@ -39,11 +49,31 @@ export const useGameStore = create<GameStore>()(
       ...initialState,
 
       click: () => {
-        set((state) => ({
+        const state = get();
+        const xpGain = 1; // 1 XP per click
+        set({
           commits: state.commits + state.commitsPerClick,
           totalCommits: state.totalCommits + state.commitsPerClick,
           totalClicks: state.totalClicks + 1,
-        }));
+        });
+        state.addExperience(xpGain);
+      },
+
+      addExperience: (amount: number) => {
+        set((state) => {
+          const newXP = state.experience + amount;
+          const xpNeeded = calculateXPForLevel(state.level);
+
+          if (newXP >= xpNeeded) {
+            // Level up!
+            return {
+              experience: newXP - xpNeeded,
+              level: state.level + 1,
+            };
+          }
+
+          return { experience: newXP };
+        });
       },
 
       buyUpgrade: (upgradeId: string) => {
@@ -62,11 +92,13 @@ export const useGameStore = create<GameStore>()(
         };
 
         const newCPS = calculateTotalCPS(newUpgrades);
+        const newClickPower = calculateClickPower(newUpgrades);
 
         set({
           commits: state.commits - cost,
           upgrades: newUpgrades,
           commitsPerSecond: newCPS,
+          commitsPerClick: newClickPower,
         });
       },
 
@@ -165,6 +197,7 @@ export const useGameStore = create<GameStore>()(
           ...state,
           ...loadedState,
           commitsPerSecond: calculateTotalCPS(loadedState.upgrades || state.upgrades),
+          commitsPerClick: calculateClickPower(loadedState.upgrades || state.upgrades),
         }));
       },
 
@@ -179,6 +212,38 @@ export const useGameStore = create<GameStore>()(
         const state = get();
         return state.commits >= state.getUpgradeCost(upgradeId);
       },
+
+      // Dev mode actions
+      devAddCommits: (amount: number) => {
+        set((state) => ({
+          commits: state.commits + amount,
+          totalCommits: state.totalCommits + amount,
+        }));
+      },
+
+      devAddXP: (amount: number) => {
+        get().addExperience(amount);
+      },
+
+      devUnlockAllUpgrades: () => {
+        const allUpgrades: Record<string, number> = {};
+        UPGRADES.forEach((upgrade) => {
+          allUpgrades[upgrade.id] = 1;
+        });
+
+        const newCPS = calculateTotalCPS(allUpgrades);
+        const newClickPower = calculateClickPower(allUpgrades);
+
+        set({
+          upgrades: allUpgrades,
+          commitsPerSecond: newCPS,
+          commitsPerClick: newClickPower,
+        });
+      },
+
+      devSetLevel: (level: number) => {
+        set({ level, experience: 0 });
+      },
     }),
     {
       name: "code-clicker-storage",
@@ -192,6 +257,8 @@ export const useGameStore = create<GameStore>()(
         totalClicks: state.totalClicks,
         startedAt: state.startedAt,
         playTime: state.playTime,
+        experience: state.experience,
+        level: state.level,
       }),
     }
   )
