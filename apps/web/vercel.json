@@ -1,5 +1,5 @@
 {
     "framework": "vite",
-    "buildCommand": "cd ../.. && npm install && cd apps/web && npm run build",
+    "buildCommand": "cd ../.. && bun install && bun run build --filter=@code-clicker/web",
     "outputDirectory": "dist"
 }
