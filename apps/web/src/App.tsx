@@ -16,7 +16,7 @@ import type { GameState, SaveGameResponse, LoadGameResponse } from "@code-clicke
 const API_URL = "http://localhost:3001";
 
 function App() {
-  const { tick, checkAchievements, reset, loadState, commits, totalCommits, upgrades, achievements, totalClicks, playTime, commitsPerSecond, startedAt } = useGameStore();
+  const { tick, checkAchievements, reset, loadState } = useGameStore();
   const [newAchievements, setNewAchievements] = useState<string[]>([]);
 
   // Game tick - runs every 100ms for smooth updates
